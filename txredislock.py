@@ -40,12 +40,9 @@ class txredisWrapper(object):
         from txredis.exceptions import NoScript
         self._no_script = NoScript
 
-    @defer.inlineCallbacks
     def setnx(self, key, value, expire):
-        success = yield self._client.setnx(key, value)
-        if success:
-            yield self._client.expire(key, expire)
-        defer.returnValue(success)
+        return self._client.send('SET', key, value, 'EX', str(expire), 'NX')
+
 
     def blpop(self, key, timeout):
         return self._client.bpop([key], timeout=timeout)
