@@ -56,19 +56,21 @@ class txredisWrapper(object):
 
 
 class Lock(object):
-    def __init__(self, redis_client, name, expire=None):
+    def __init__(self, redis_client, name, expire=None, api=None):
         self._client = redis_client
         self._expire = expire if expire is None else int(expire)
         self._tok = None
         self._name = 'lock:'+name
         self._signal = 'lock-signal:'+name
-        self._wrapper = None
+        self._wrapper = self._getWrapper(api)
 
-        module_name = self._client.__class__.__module__.split('.')[0]
+    def _getWrapper(self, api):
+        module_name = api or self._client.__class__.__module__.split('.')[0]
+
         if module_name == 'txredisapi':
-            self._wrapper = txredisapiWrapper(self._client)
+            return txredisapiWrapper(self._client)
         elif module_name == 'txredis':
-            self._wrapper = txredisWrapper(self._client)
+            return txredisWrapper(self._client)
         else:
             raise NotImplementedError("Client module '%s' is not supported" % module_name)
 
